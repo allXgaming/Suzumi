@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         'X-Title': 'AllX AI Chat'
       },
       body: JSON.stringify({
-        model: model || 'openai/gpt-3.5-turbo',
+        model: model || 'openrouter/free',
         messages,
         temperature: 0.75,
         max_tokens: 600
