@@ -160,19 +160,18 @@
 
 <script type="module">
   // ========== FIREBASE CONFIG (আপনার নিজের তথ্য দিন) ==========
-    const firebaseConfig = {
-  apiKey: "AIzaSyAYA7KkyMjuspnNjaxBAiWUUtCb_bJDuhQ",
-  authDomain: "testing-4-e92b8.firebaseapp.com",
-  databaseURL: "https://testing-4-e92b8-default-rtdb.firebaseio.com",
-  projectId: "testing-4-e92b8",
-  storageBucket: "testing-4-e92b8.firebasestorage.app",
-  messagingSenderId: "786753674701",
-  appId: "1:786753674701:web:746c0bad857eec0b2df884",
-  measurementId: "G-CGWL05MEDT"
-};
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-  // OpenRouter মডেল (এটি ক্লায়েন্ট সাইডে রাখা নিরাপদ)
-  const OPENROUTER_MODEL = "openai/gpt-3.5-turbo";
+  // ✅ OpenRouter ফ্রি মডেল
+  const OPENROUTER_MODEL = "openrouter/free";
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -192,14 +191,12 @@
   let chatHistory = [];
   const STORAGE_PREFIX = 'allx_chat_';
 
-  // স্ক্রিন সুইচ ফাংশন
   window.showScreen = (screenId) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
     if (screenId === 'chatScreen') setTimeout(() => chatInput?.focus(), 80);
   };
 
-  // চ্যাট হিস্ট্রি লোকালস্টোরেজ থেকে লোড / সেভ
   function loadChatHistory(botId) {
     const stored = localStorage.getItem(STORAGE_PREFIX + botId);
     return stored ? JSON.parse(stored) : [];
@@ -208,7 +205,6 @@
     if (botId) localStorage.setItem(STORAGE_PREFIX + botId, JSON.stringify(history));
   }
 
-  // Firebase থেকে বট লিস্ট লোড
   onValue(ref(db, 'chatbots'), snapshot => {
     botGrid.innerHTML = '';
     const data = snapshot.val();
@@ -226,7 +222,6 @@
     });
   });
 
-  // চ্যাট স্ক্রিন ওপেন
   function openChat(botId, bot) {
     currentBotId = botId;
     currentBot = bot;
@@ -242,7 +237,6 @@
     showScreen('chatScreen');
   }
 
-  // হিস্ট্রি থেকে মেসেজ রেন্ডার
   function renderMessagesFromHistory(history) {
     chatMessages.innerHTML = '';
     history.forEach(msg => {
@@ -253,7 +247,6 @@
     scrollToBottom();
   }
 
-  // UI-তে মেসেজ অ্যাড
   function addMessageUI(role, text, animate = true) {
     const div = document.createElement('div');
     div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
@@ -274,7 +267,6 @@
     if (area) area.scrollTop = area.scrollHeight;
   }
 
-  // টাইপিং ইন্ডিকেটর
   function showTyping() {
     const ind = document.createElement('div');
     ind.id = 'typingIndicator';
@@ -290,7 +282,6 @@
     document.getElementById('typingIndicator')?.remove();
   }
 
-  // ========== মেসেজ সেন্ড (সার্ভারলেস API কল) ==========
   window.sendMessage = async function() {
     const text = chatInput.value.trim();
     if (!text || !currentBot) return;
@@ -304,7 +295,6 @@
     showTyping();
 
     try {
-      // === রিয়েল টাইম ডেট (ভারতীয় সময়) ===
       const now = new Date();
       const optionsDate = { timeZone: "Asia/Kolkata", weekday: "long", year: "numeric", month: "long", day: "numeric" };
       const optionsTime = { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true };
@@ -449,7 +439,6 @@ You never act like software.`;
 
       const messages = [{ role: 'system', content: systemPrompt }, ...chatHistory.slice(-15)];
 
-      // 🔁 সার্ভারলেস API কল
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -460,7 +449,14 @@ You never act like software.`;
       });
 
       const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content || "Kichu bolte parchi na 😕";
+
+      let reply;
+      if (res.ok && data.choices?.[0]?.message?.content) {
+        reply = data.choices[0].message.content;
+      } else {
+        // ফলব্যাক রিপ্লাই
+        reply = data.fallbackReply || "Kichu bolte parchi na 😕";
+      }
 
       hideTyping();
       addMessageUI('assistant', reply);
@@ -474,13 +470,11 @@ You never act like software.`;
     }
   };
 
-  // ইনপুট ফিল্ড অটো-রিসাইজ
   chatInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
   });
 
-  // এন্টার প্রেসে সেন্ড
   chatInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
