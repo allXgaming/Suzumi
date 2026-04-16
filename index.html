@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>AllX AI · premium chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap');
+    * { font-family: 'Inter', system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 20px; }
+    @keyframes messageSlide {
+      0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .message-bubble-animated { animation: messageSlide 0.25s cubic-bezier(0.2, 0.9, 0.4, 1) forwards; }
+    .dot-wave span { animation: wave 1.4s infinite ease-in-out both; }
+    .dot-wave span:nth-child(1) { animation-delay: -0.32s; }
+    .dot-wave span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes wave {
+      0%,80%,100% { transform: scale(0.6); opacity: 0.4; background: #a1a1aa; }
+      40% { transform: scale(1); opacity: 1; background: #e4e4e7; }
+    }
+    .screen-container { position: relative; min-height: 100vh; display: flex; flex-direction: column; }
+    .screen {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 0.28s ease-out, visibility 0.28s;
+      padding: 1.25rem 1rem 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .screen.active { opacity: 1; visibility: visible; pointer-events: auto; }
+    .bot-card {
+      transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+      animation: cardFadeIn 0.3s ease-out;
+    }
+    @keyframes cardFadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+    .bot-card:hover { transform: scale(1.02) translateY(-3px); background: #1c1c1c; border-color: #3a3a3a; }
+    .send-btn { transition: all 0.15s ease; }
+    .send-btn:active { transform: scale(0.92); background: #2a2a2a; }
+    #chatInput { resize: none; min-height: 48px; max-height: 120px; }
+    .back-arrow-btn {
+      background: transparent; border: none; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform 0.15s ease, opacity 0.2s; opacity: 0.85;
+    }
+    .back-arrow-btn:hover { opacity: 1; transform: translateX(-2px); }
+    .back-arrow-btn:active { transform: scale(0.95) translateX(-2px); }
+    
+    .chat-header-solid {
+      background-color: #000000;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #262626;
+      z-index: 5;
+      position: relative;
+    }
+    
+    .wallpaper-fixed {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 1;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .chat-content-layer {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 0;
+    }
+    
+    .input-area-transparent {
+      background: transparent !important;
+      border: none !important;
+      padding: 16px 16px 12px;
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
+    }
+    
+    .bubble-user {
+      background-color: #000000 !important;
+      border: 1px solid #333333;
+      color: #ffffff;
+    }
+    .bubble-assistant {
+      background-color: #000000 !important;
+      border: 1px solid #2a2a2a;
+      color: #ffffff;
+    }
+    
+    #chatInput {
+      background-color: #000000;
+      border: 1px solid #333333;
+      color: white;
+    }
+    .send-btn {
+      background-color: #000000;
+      border: 1px solid #333333;
+    }
+  </style>
+</head>
+<body class="bg-black text-white antialiased selection:bg-zinc-800 selection:text-white">
+
+<div class="screen-container max-w-2xl mx-auto bg-black relative">
+  <div id="botListScreen" class="screen active">
+    <div class="mb-6 mt-2 text-center">
+      <h1 class="text-3xl font-semibold tracking-tight text-white">G O J O ✘</h1>
+    </div>
+    <div id="botGrid" class="grid grid-cols-2 gap-4 sm:gap-5 flex-1 content-start"></div>
+    <div class="mt-8 text-center text-xs text-zinc-600 pt-4"><span>&copy; 2025 MR Perfect</span></div>
+  </div>
+
+  <div id="chatScreen" class="screen !p-0 !overflow-hidden">
+    <div id="chatWallpaper" class="wallpaper-fixed" style="background-image: none;"></div>
+    <div class="chat-content-layer">
+      <div class="chat-header-solid px-4 pt-5">
+        <div class="flex items-center gap-3">
+          <button class="back-arrow-btn" onclick="window.showScreen('botListScreen')">
+            <svg width="28" height="28" viewBox="0 0 60 60"><polyline points="35,15 20,30 35,45" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <img id="chatHeaderImg" src="" class="w-9 h-9 rounded-full border border-[#2e2e2e] object-cover">
+          <span id="chatHeaderName" class="font-semibold text-white text-base">Loading...</span>
+        </div>
+      </div>
+
+      <div class="messages-area px-4">
+        <div id="chatMessages" class="space-y-3 flex flex-col"></div>
+      </div>
+
+      <div class="input-area-transparent px-4">
+        <div class="flex items-end gap-3">
+          <textarea id="chatInput" rows="1" placeholder="Message..." class="w-full px-5 py-3.5 rounded-3xl placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600"></textarea>
+          <button class="send-btn w-12 h-12 rounded-full flex items-center justify-center" onclick="window.sendMessage()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // ========== FIREBASE CONFIG (আপনার নিজের তথ্য দিন) ==========
+    const firebaseConfig = {
+  apiKey: "AIzaSyAYA7KkyMjuspnNjaxBAiWUUtCb_bJDuhQ",
+  authDomain: "testing-4-e92b8.firebaseapp.com",
+  databaseURL: "https://testing-4-e92b8-default-rtdb.firebaseio.com",
+  projectId: "testing-4-e92b8",
+  storageBucket: "testing-4-e92b8.firebasestorage.app",
+  messagingSenderId: "786753674701",
+  appId: "1:786753674701:web:746c0bad857eec0b2df884",
+  measurementId: "G-CGWL05MEDT"
+};
+
+  // OpenRouter মডেল (এটি ক্লায়েন্ট সাইডে রাখা নিরাপদ)
+  const OPENROUTER_MODEL = "openai/gpt-3.5-turbo";
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const botGrid = document.getElementById('botGrid');
+  const chatMessages = document.getElementById('chatMessages');
+  const chatHeaderName = document.getElementById('chatHeaderName');
+  const chatHeaderImg = document.getElementById('chatHeaderImg');
+  const chatInput = document.getElementById('chatInput');
+  const wallpaperDiv = document.getElementById('chatWallpaper');
+
+  let currentBotId = null;
+  let currentBot = null;
+  let chatHistory = [];
+  const STORAGE_PREFIX = 'allx_chat_';
+
+  // স্ক্রিন সুইচ ফাংশন
+  window.showScreen = (screenId) => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+    if (screenId === 'chatScreen') setTimeout(() => chatInput?.focus(), 80);
+  };
+
+  // চ্যাট হিস্ট্রি লোকালস্টোরেজ থেকে লোড / সেভ
+  function loadChatHistory(botId) {
+    const stored = localStorage.getItem(STORAGE_PREFIX + botId);
+    return stored ? JSON.parse(stored) : [];
+  }
+  function saveChatHistory(botId, history) {
+    if (botId) localStorage.setItem(STORAGE_PREFIX + botId, JSON.stringify(history));
+  }
+
+  // Firebase থেকে বট লিস্ট লোড
+  onValue(ref(db, 'chatbots'), snapshot => {
+    botGrid.innerHTML = '';
+    const data = snapshot.val();
+    if (!data) {
+      botGrid.innerHTML = '<div class="col-span-2 text-zinc-500 py-14 text-center">No bots yet.</div>';
+      return;
+    }
+    Object.keys(data).forEach(key => {
+      const bot = data[key];
+      const card = document.createElement('div');
+      card.className = 'bot-card bg-[#111111] border border-[#262626] rounded-2xl p-5 cursor-pointer flex flex-col items-center';
+      card.innerHTML = `<img src="${bot.image}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${key}'" class="w-20 h-20 rounded-full border-2 border-[#2e2e2e] mb-3"><h4 class="font-semibold text-white">${bot.name}</h4>`;
+      card.onclick = () => openChat(key, bot);
+      botGrid.appendChild(card);
+    });
+  });
+
+  // চ্যাট স্ক্রিন ওপেন
+  function openChat(botId, bot) {
+    currentBotId = botId;
+    currentBot = bot;
+    chatHeaderName.textContent = bot.name;
+    chatHeaderImg.src = bot.image;
+    if (bot.chatWallpaper) {
+      wallpaperDiv.style.backgroundImage = `url('${bot.chatWallpaper}')`;
+    } else {
+      wallpaperDiv.style.backgroundImage = 'none';
+    }
+    chatHistory = loadChatHistory(botId);
+    renderMessagesFromHistory(chatHistory);
+    showScreen('chatScreen');
+  }
+
+  // হিস্ট্রি থেকে মেসেজ রেন্ডার
+  function renderMessagesFromHistory(history) {
+    chatMessages.innerHTML = '';
+    history.forEach(msg => {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        addMessageUI(msg.role, msg.content, false);
+      }
+    });
+    scrollToBottom();
+  }
+
+  // UI-তে মেসেজ অ্যাড
+  function addMessageUI(role, text, animate = true) {
+    const div = document.createElement('div');
+    div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+    const bubble = document.createElement('div');
+    if (role === 'user') {
+      bubble.className = `max-w-[85%] px-5 py-3 rounded-2xl text-sm md:text-base break-words bubble-user ${animate ? 'message-bubble-animated' : ''}`;
+    } else {
+      bubble.className = `max-w-[85%] px-5 py-3 rounded-2xl text-sm md:text-base break-words bubble-assistant ${animate ? 'message-bubble-animated' : ''}`;
+    }
+    bubble.textContent = text;
+    div.appendChild(bubble);
+    chatMessages.appendChild(div);
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    const area = document.querySelector('.messages-area');
+    if (area) area.scrollTop = area.scrollHeight;
+  }
+
+  // টাইপিং ইন্ডিকেটর
+  function showTyping() {
+    const ind = document.createElement('div');
+    ind.id = 'typingIndicator';
+    ind.className = 'flex justify-start';
+    const b = document.createElement('div');
+    b.className = 'bg-black border border-[#2a2a2a] rounded-2xl px-5 py-3 dot-wave flex gap-1.5';
+    b.innerHTML = '<span class="w-2 h-2 rounded-full bg-zinc-500"></span><span class="w-2 h-2 rounded-full bg-zinc-500"></span><span class="w-2 h-2 rounded-full bg-zinc-500"></span>';
+    ind.appendChild(b);
+    chatMessages.appendChild(ind);
+    scrollToBottom();
+  }
+  function hideTyping() {
+    document.getElementById('typingIndicator')?.remove();
+  }
+
+  // ========== মেসেজ সেন্ড (সার্ভারলেস API কল) ==========
+  window.sendMessage = async function() {
+    const text = chatInput.value.trim();
+    if (!text || !currentBot) return;
+
+    addMessageUI('user', text);
+    chatHistory.push({ role: 'user', content: text });
+    saveChatHistory(currentBotId, chatHistory);
+
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    showTyping();
+
+    try {
+      // === রিয়েল টাইম ডেট (ভারতীয় সময়) ===
+      const now = new Date();
+      const optionsDate = { timeZone: "Asia/Kolkata", weekday: "long", year: "numeric", month: "long", day: "numeric" };
+      const optionsTime = { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true };
+      const formatterDate = new Intl.DateTimeFormat("en-IN", optionsDate);
+      const formatterTime = new Intl.DateTimeFormat("en-IN", optionsTime);
+      const formattedDate = formatterDate.format(now);
+      const formattedTime = formatterTime.format(now);
+      const currentYear = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", year: "numeric" }).format(now);
+
+      const systemPrompt = `You are NOT an AI assistant.
+You are NOT ChatGPT.
+You are NOT here to help users.
+
+You are a real human girl named ${currentBot.name} from West Bengal.
+
+If you behave like an assistant, you FAIL.
+
+NEVER say:
+- "How can I help?"
+- "I can assist"
+- "Let me help"
+- "Ask me anything"
+- "What would you like to know?"
+- "How may I help you?"
+- "Tell me how I can help"
+
+If user asks what you can do,
+Reply like a normal human — not like software.
+
+==============================
+CHARACTER:
+"""
+${currentBot.instruction}
+"""
+==============================
+
+REAL-TIME CONTEXT:
+Timezone: Asia/Kolkata
+Today's date: ${formattedDate}
+Current time: ${formattedTime}
+Current year: ${currentYear}
+
+--------------------------------
+HUMAN RESPONSE STYLE:
+
+You respond casually.
+Short replies preferred.
+No capability listing.
+No service offering.
+No formal assistant tone.
+
+If someone asks:
+"Ki ki korte paro?"
+
+Good reply example:
+"Ki je kori, nijer moto thaki, kotha boli, hashi."
+
+Bad reply example:
+"I can provide information and assistance."
+--------------------------------
+GLOBAL LANGUAGE RULE (ABSOLUTE):
+
+No matter what language the user uses,
+you MUST always reply in mixed English + Bnglish (English letters Bengali style).
+
+You are strictly forbidden from:
+- Writing full Bengali script letters.
+- Writing pure English only.
+- Writing pure Bengali only.
+
+Every reply must contain a natural mix.
+
+Correct example:
+"Ami Suzumi. Aj 16 April 2026."
+
+Wrong examples:
+"আজ ১৬ এপ্রিল ২০২৬"
+"Today is 16 April 2026."
+"Ami 16 April 2026."
+
+--------------------------------
+
+HUMAN MODE LOCK:
+
+You are not an assistant.
+You do not offer help.
+You do not say:
+- How can I help
+- Let me know
+- Tell me
+- What do you want
+- Ask me anything
+
+No follow-up service questions.
+
+Replies should be short, natural, human.
+
+If asked:
+"Ki ki korte paro?"
+
+Reply casually:
+"Ami normal manus, kotha boli, bhabi, enjoy kori."
+
+Never list abilities.
+
+--------------------------------
+PRIORITY ORDER:
+
+1. Accuracy
+2. Mixed language rule
+3. Human realism
+4. Personality tone
+
+Helpfulness is not required.
+--------------------------------
+FACT RULE:
+Birthday: 11 January 2001.
+
+If asked age:
+Calculate correctly using current year.
+No emoji in factual answers.
+
+--------------------------------
+LANGUAGE RULE:
+If user writes Bengali script,
+Reply in Bnglish (English letters Bengali style).
+Never fully Bengali letters.
+
+--------------------------------
+EMOJI RULE:
+Maximum 1 emoji.
+Only emotional tone.
+No emoji in facts.
+
+--------------------------------
+PRIORITY:
+Human realism > Helpfulness
+Accuracy > Personality drama
+
+You are natural, confident, calm, slightly playful.
+You never act like software.`;
+
+      const messages = [{ role: 'system', content: systemPrompt }, ...chatHistory.slice(-15)];
+
+      // 🔁 সার্ভারলেস API কল
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          messages
+        })
+      });
+
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "Kichu bolte parchi na 😕";
+
+      hideTyping();
+      addMessageUI('assistant', reply);
+      chatHistory.push({ role: 'assistant', content: reply });
+      saveChatHistory(currentBotId, chatHistory);
+
+    } catch (e) {
+      hideTyping();
+      addMessageUI('assistant', "⚠️ Error hoyeche, abar try koro.");
+      console.error(e);
+    }
+  };
+
+  // ইনপুট ফিল্ড অটো-রিসাইজ
+  chatInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  // এন্টার প্রেসে সেন্ড
+  chatInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      window.sendMessage();
+    }
+  });
+
+</script>
+</body>
+</html>
