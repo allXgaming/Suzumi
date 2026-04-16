@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllX AI - Suzumi</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background:linear-gradient(145deg,#0a0c12,#0f1119);
+    min-height:100vh;
+    color:#eef2ff;
+}
+
+/* Mascot */
+.mascot-wrapper{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    width:70px;
+    height:70px;
+    z-index:2000;
+    cursor:pointer;
+    filter: drop-shadow(0 4px 10px rgba(168,85,247,0.3));
+    transition: transform 0.2s;
+}
+.mascot-wrapper:hover{
+    transform: scale(1.05);
+}
+.mascot-wrapper svg{
+    width:100%;
+    height:100%;
+}
+
+/* Chat Container */
+.allx-chat-container{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    visibility:hidden;
+    opacity:0;
+    transform:translateY(100%);
+    transition:0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+    z-index:3000;
+    pointer-events: none;
+}
+.allx-chat-container.chat-open{
+    visibility:visible;
+    opacity:1;
+    transform:translateY(0);
+    pointer-events: auto;
+}
+
+/* Chat Window */
+.chat-window{
+    width:100%;
+    max-width:500px;
+    height:70vh;
+    background:#11131f;
+    border-radius:28px 28px 0 0;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 -10px 40px rgba(0,0,0,0.6);
+    border:1px solid #2a2e42;
+    border-bottom:none;
+    backdrop-filter: blur(4px);
+}
+
+.chat-header{
+    padding:16px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#0b0e1a;
+    border-radius:28px 28px 0 0;
+    border-bottom:1px solid #2a2e42;
+}
+.chat-header span{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+    font-size:1.2rem;
+}
+.chat-header button{
+    background:none;
+    border:none;
+    color:#a0a5c0;
+    font-size:24px;
+    cursor:pointer;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background 0.2s;
+}
+.chat-header button:hover{
+    background:#1e2338;
+    color:#fff;
+}
+
+.chat-messages{
+    flex:1;
+    padding:18px 16px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    scroll-behavior:smooth;
+}
+
+.message{
+    display:flex;
+    margin-bottom:4px;
+}
+.message.user{
+    justify-content:flex-end;
+}
+.message.assistant{
+    justify-content:flex-start;
+}
+
+.message-bubble{
+    padding:10px 16px;
+    border-radius:22px;
+    background:#262b40;
+    max-width:85%;
+    word-wrap:break-word;
+    font-size:0.95rem;
+    line-height:1.5;
+    box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    border:1px solid #3a405a;
+}
+.message.user .message-bubble{
+    background:linear-gradient(135deg,#7c3aed,#a855f7);
+    border:1px solid #c084fc;
+    color:white;
+}
+
+/* Typing Indicator */
+.typing-indicator{
+    align-self:flex-start;
+    padding:12px 18px;
+    background:#1e2235;
+    border-radius:22px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    margin-top:4px;
+    border:1px solid #3a405a;
+}
+.typing-indicator span{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#a0a5c0;
+    display:inline-block;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-indicator span:nth-child(1){ animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2){ animation-delay: -0.16s; }
+@keyframes bounce{
+    0%, 80%, 100% { transform: scale(0.6); opacity:0.5; }
+    40% { transform: scale(1); opacity:1; background:#c084fc; }
+}
+
+.chat-input-area{
+    display:flex;
+    padding:14px 16px;
+    gap:12px;
+    background:#0c0f1a;
+    border-top:1px solid #252a40;
+    align-items:flex-end;
+}
+#chatInput{
+    flex:1;
+    padding:12px 16px;
+    border:none;
+    border-radius:24px;
+    background:#1a1e2f;
+    color:white;
+    font-size:1rem;
+    resize:none;
+    max-height:120px;
+    outline:none;
+    border:1px solid #3a405a;
+    transition:border 0.2s;
+    font-family:inherit;
+}
+#chatInput:focus{
+    border-color:#a855f7;
+}
+.send-btn{
+    width:48px;
+    height:48px;
+    border:none;
+    border-radius:50%;
+    background:#7c3aed;
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:0.2s;
+    flex-shrink:0;
+}
+.send-btn:hover{
+    background:#9f5cf1;
+    transform:scale(1.02);
+}
+
+.chat-messages::-webkit-scrollbar{
+    width:6px;
+}
+.chat-messages::-webkit-scrollbar-track{
+    background:#1a1e2f;
+}
+.chat-messages::-webkit-scrollbar-thumb{
+    background:#3a405a;
+    border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1 style="text-align:center;padding:40px 20px;font-weight:500;letter-spacing:1px;">
+    <span style="background:linear-gradient(135deg,#c084fc,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AllX Gaming</span>
+</h1>
+<p style="text-align:center;margin-top:-30px;color:#9aa0c0;font-size:0.95rem;">Chat with Suzumi ✨</p>
+
+<!-- Mascot -->
+<div class="mascot-wrapper" id="mascot">
+<svg viewBox="0 0 120 120">
+    <defs>
+        <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1e1a3a"/>
+            <stop offset="100%" stop-color="#2d2555"/>
+        </linearGradient>
+    </defs>
+    <circle cx="60" cy="60" r="55" fill="url(#bgGrad)" stroke="#a855f7" stroke-width="3"/>
+    <circle cx="45" cy="50" r="8" fill="white"/>
+    <circle cx="75" cy="50" r="8" fill="white"/>
+    <circle cx="45" cy="50" r="3.5" fill="#1e1e3a"/>
+    <circle cx="75" cy="50" r="3.5" fill="#1e1e3a"/>
+    <ellipse cx="35" cy="60" rx="6" ry="3" fill="#ff99cc" opacity="0.6"/>
+    <ellipse cx="85" cy="60" rx="6" ry="3" fill="#ff99cc" opacity="0.6"/>
+    <path d="M50 70 Q60 78, 70 70" stroke="#ffb3d9" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M30 30 Q10 30, 10 50 Q10 70, 30 70" stroke="#a855f7" stroke-width="4" fill="none" opacity="0.5"/>
+    <path d="M90 30 Q110 30, 110 50 Q110 70, 90 70" stroke="#a855f7" stroke-width="4" fill="none" opacity="0.5"/>
+</svg>
+</div>
+
+<!-- Chat Window -->
+<div class="allx-chat-container" id="chatBox">
+    <div class="chat-window">
+        <div class="chat-header">
+            <span>
+                <span style="font-size:24px;">🐾</span> 
+                Suzumi · AllX AI
+            </span>
+            <button onclick="toggleChat()" aria-label="Close chat">✕</button>
+        </div>
+        <div class="chat-messages" id="messages"></div>
+        <div class="chat-input-area">
+            <textarea id="chatInput" rows="1" placeholder="Type your message..."></textarea>
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const chatBox = document.getElementById("chatBox");
+const mascot = document.getElementById("mascot");
+const messagesContainer = document.getElementById("messages");
+const input = document.getElementById("chatInput");
+
+let conversation = [];
+
+input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+function toggleChat(){
+    chatBox.classList.toggle("chat-open");
+    if (chatBox.classList.contains("chat-open")) {
+        input.focus();
+    }
+}
+
+mascot.addEventListener("click", toggleChat);
+
+function showTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'typing-indicator';
+    indicator.id = 'typingIndicator';
+    indicator.innerHTML = '<span></span><span></span><span></span>';
+    messagesContainer.appendChild(indicator);
+    scrollToBottom();
+}
+
+function hideTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+}
+
+function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function addMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = `message ${role}`;
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.innerText = text;
+    div.appendChild(bubble);
+    messagesContainer.appendChild(div);
+    scrollToBottom();
+}
+
+async function sendMessage(){
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage("user", text);
+    conversation.push({ role: "user", content: text });
+    input.value = "";
+    input.style.height = 'auto';
+
+    showTypingIndicator();
+
+    try {
+        const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: conversation })
+        });
+
+        if (!res.ok) {
+            throw new Error(`Server Error: ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (!data.reply) throw new Error("Invalid API response");
+
+        hideTypingIndicator();
+        addMessage("assistant", data.reply);
+        conversation.push({ role: "assistant", content: data.reply });
+
+    } catch (err) {
+        hideTypingIndicator();
+        addMessage("assistant", "⚠️ Connection problem. Try again later.");
+        console.error("Chat error:", err);
+    }
+}
+</script>
+
+</body>
+</html>
