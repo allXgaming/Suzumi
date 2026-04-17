@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>AllX AI · premium chat</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -44,13 +44,13 @@
     .send-btn:active { transform: scale(0.92); background: #2a2a2a; }
     #chatInput { resize: none; min-height: 48px; max-height: 120px; }
     .back-arrow-btn {
-      background: transparent; border: none; padding: 0;
+      background: transparent; border: none; padding: 8px;
       display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; transition: transform 0.15s ease, opacity 0.2s; opacity: 0.85;
+      margin: -8px;
     }
     .back-arrow-btn:hover { opacity: 1; transform: translateX(-2px); }
     .back-arrow-btn:active { transform: scale(0.95) translateX(-2px); }
-    
     .chat-header-solid {
       background-color: #000000;
       padding-bottom: 12px;
@@ -58,7 +58,6 @@
       z-index: 5;
       position: relative;
     }
-    
     .wallpaper-fixed {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -69,7 +68,6 @@
       pointer-events: none;
       z-index: 0;
     }
-    
     .chat-content-layer {
       position: relative;
       z-index: 2;
@@ -78,7 +76,6 @@
       flex-direction: column;
       overflow-y: auto;
     }
-    
     .messages-area {
       flex: 1;
       overflow-y: auto;
@@ -86,16 +83,14 @@
       flex-direction: column;
       padding: 16px 0;
     }
-    
     .input-area-transparent {
       background: transparent !important;
       border: none !important;
-      padding: 16px 16px 12px;
+      padding: 16px 16px max(12px, env(safe-area-inset-bottom));
       position: sticky;
       bottom: 0;
       z-index: 5;
     }
-    
     .bubble-user {
       background-color: #000000 !important;
       border: 1px solid #333333;
@@ -106,29 +101,41 @@
       border: 1px solid #2a2a2a;
       color: #ffffff;
     }
-    
     #chatInput {
       background-color: #000000;
       border: 1px solid #333333;
       color: white;
+      font-size: 16px;
     }
     .send-btn {
       background-color: #000000;
       border: 1px solid #333333;
+      min-width: 48px;
+      min-height: 48px;
+    }
+    @media (max-width: 480px) {
+      .screen { padding: 0.75rem 0.75rem 1rem; }
+      .chat-header-solid { padding-left: 12px; padding-right: 12px; }
+      .messages-area { padding-left: 8px; padding-right: 8px; }
+      .input-area-transparent { padding-left: 12px; padding-right: 12px; }
+      .bot-card { padding: 12px; }
+      .bot-card img { width: 64px; height: 64px; }
     }
   </style>
 </head>
 <body class="bg-black text-white antialiased selection:bg-zinc-800 selection:text-white">
 
 <div class="screen-container max-w-2xl mx-auto bg-black relative">
+  <!-- Bot List Screen -->
   <div id="botListScreen" class="screen active">
     <div class="mb-6 mt-2 text-center">
-      <h1 class="text-3xl font-semibold tracking-tight text-white">G O J O ✘</h1>
+      <h1 class="text-3xl font-semibold tracking-tight text-white">🤖 Choose AI Friend</h1>
     </div>
-    <div id="botGrid" class="grid grid-cols-2 gap-4 sm:gap-5 flex-1 content-start"></div>
-    <div class="mt-8 text-center text-xs text-zinc-600 pt-4"><span>&copy; 2025 MR Perfect</span></div>
+    <div id="botGrid" class="grid grid-cols-2 gap-3 sm:gap-4 flex-1 content-start"></div>
+    <div class="mt-8 text-center text-xs text-zinc-600 pt-4"><span>AllX · premium presence</span></div>
   </div>
 
+  <!-- Chat Screen -->
   <div id="chatScreen" class="screen !p-0 !overflow-hidden">
     <div id="chatWallpaper" class="wallpaper-fixed" style="background-image: none;"></div>
     <div class="chat-content-layer">
@@ -138,7 +145,7 @@
             <svg width="28" height="28" viewBox="0 0 60 60"><polyline points="35,15 20,30 35,45" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <img id="chatHeaderImg" src="" class="w-9 h-9 rounded-full border border-[#2e2e2e] object-cover">
-          <span id="chatHeaderName" class="font-semibold text-white text-base">Loading...</span>
+          <span id="chatHeaderName" class="font-semibold text-white text-base truncate">Loading...</span>
         </div>
       </div>
 
@@ -147,9 +154,9 @@
       </div>
 
       <div class="input-area-transparent px-4">
-        <div class="flex items-end gap-3">
-          <textarea id="chatInput" rows="1" placeholder="Message..." class="w-full px-5 py-3.5 rounded-3xl placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600"></textarea>
-          <button class="send-btn w-12 h-12 rounded-full flex items-center justify-center" onclick="window.sendMessage()">
+        <div class="flex items-end gap-2 sm:gap-3">
+          <textarea id="chatInput" rows="1" placeholder="Message..." class="w-full px-4 py-3 rounded-3xl placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600"></textarea>
+          <button class="send-btn w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" onclick="window.sendMessage()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -159,24 +166,24 @@
 </div>
 
 <script type="module">
-  // ========== FIREBASE CONFIG (আপনার নিজের তথ্য দিন) ==========
-    const firebaseConfig = {
-  apiKey: "AIzaSyAYA7KkyMjuspnNjaxBAiWUUtCb_bJDuhQ",
-  authDomain: "testing-4-e92b8.firebaseapp.com",
-  databaseURL: "https://testing-4-e92b8-default-rtdb.firebaseio.com",
-  projectId: "testing-4-e92b8",
-  storageBucket: "testing-4-e92b8.firebasestorage.app",
-  messagingSenderId: "786753674701",
-  appId: "1:786753674701:web:746c0bad857eec0b2df884",
-  measurementId: "G-CGWL05MEDT"
-};
-
-  // ✅ OpenRouter ফ্রি মডেল
-  const OPENROUTER_MODEL = "openrouter/free";
+  // ==================== Firebase কনফিগ (আপনার তথ্য দিন) ====================
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  
+  // Hugging Face মডেল (আপনার পছন্দমতো)
+  const HF_MODEL = "meta-llama/Llama-3.1-8B-Instruct";
+  // ====================================================================
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
+  
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
@@ -186,7 +193,7 @@
   const chatHeaderImg = document.getElementById('chatHeaderImg');
   const chatInput = document.getElementById('chatInput');
   const wallpaperDiv = document.getElementById('chatWallpaper');
-
+  
   let currentBotId = null;
   let currentBot = null;
   let chatHistory = [];
@@ -202,11 +209,12 @@
     const stored = localStorage.getItem(STORAGE_PREFIX + botId);
     return stored ? JSON.parse(stored) : [];
   }
+  
   function saveChatHistory(botId, history) {
     if (botId) localStorage.setItem(STORAGE_PREFIX + botId, JSON.stringify(history));
   }
 
-  onValue(ref(db, 'chatbots'), snapshot => {
+  onValue(ref(db, 'chatbots'), (snapshot) => {
     botGrid.innerHTML = '';
     const data = snapshot.val();
     if (!data) {
@@ -216,8 +224,11 @@
     Object.keys(data).forEach(key => {
       const bot = data[key];
       const card = document.createElement('div');
-      card.className = 'bot-card bg-[#111111] border border-[#262626] rounded-2xl p-5 cursor-pointer flex flex-col items-center';
-      card.innerHTML = `<img src="${bot.image}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${key}'" class="w-20 h-20 rounded-full border-2 border-[#2e2e2e] mb-3"><h4 class="font-semibold text-white">${bot.name}</h4>`;
+      card.className = 'bot-card bg-[#111111] border border-[#262626] rounded-2xl p-4 sm:p-5 cursor-pointer flex flex-col items-center';
+      card.innerHTML = `
+        <img src="${bot.image}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${key}'" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#2e2e2e] mb-3 object-cover">
+        <h4 class="font-semibold text-white text-sm sm:text-base">${bot.name}</h4>
+      `;
       card.onclick = () => openChat(key, bot);
       botGrid.appendChild(card);
     });
@@ -228,11 +239,13 @@
     currentBot = bot;
     chatHeaderName.textContent = bot.name;
     chatHeaderImg.src = bot.image;
+    
     if (bot.chatWallpaper) {
       wallpaperDiv.style.backgroundImage = `url('${bot.chatWallpaper}')`;
     } else {
       wallpaperDiv.style.backgroundImage = 'none';
     }
+    
     chatHistory = loadChatHistory(botId);
     renderMessagesFromHistory(chatHistory);
     showScreen('chatScreen');
@@ -253,9 +266,9 @@
     div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
     const bubble = document.createElement('div');
     if (role === 'user') {
-      bubble.className = `max-w-[85%] px-5 py-3 rounded-2xl text-sm md:text-base break-words bubble-user ${animate ? 'message-bubble-animated' : ''}`;
+      bubble.className = `max-w-[85%] sm:max-w-[80%] px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl text-sm sm:text-base break-words bubble-user ${animate ? 'message-bubble-animated' : ''}`;
     } else {
-      bubble.className = `max-w-[85%] px-5 py-3 rounded-2xl text-sm md:text-base break-words bubble-assistant ${animate ? 'message-bubble-animated' : ''}`;
+      bubble.className = `max-w-[85%] sm:max-w-[80%] px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl text-sm sm:text-base break-words bubble-assistant ${animate ? 'message-bubble-animated' : ''}`;
     }
     bubble.textContent = text;
     div.appendChild(bubble);
@@ -279,6 +292,7 @@
     chatMessages.appendChild(ind);
     scrollToBottom();
   }
+  
   function hideTyping() {
     document.getElementById('typingIndicator')?.remove();
   }
@@ -290,7 +304,7 @@
     addMessageUI('user', text);
     chatHistory.push({ role: 'user', content: text });
     saveChatHistory(currentBotId, chatHistory);
-
+    
     chatInput.value = '';
     chatInput.style.height = 'auto';
     showTyping();
@@ -355,61 +369,7 @@ Good reply example:
 
 Bad reply example:
 "I can provide information and assistance."
---------------------------------
-GLOBAL LANGUAGE RULE (ABSOLUTE):
 
-No matter what language the user uses,
-you MUST always reply in mixed English + Bnglish (English letters Bengali style).
-
-You are strictly forbidden from:
-- Writing full Bengali script letters.
-- Writing pure English only.
-- Writing pure Bengali only.
-
-Every reply must contain a natural mix.
-
-Correct example:
-"Ami Suzumi. Aj 16 April 2026."
-
-Wrong examples:
-"আজ ১৬ এপ্রিল ২০২৬"
-"Today is 16 April 2026."
-"Ami 16 April 2026."
-
---------------------------------
-
-HUMAN MODE LOCK:
-
-You are not an assistant.
-You do not offer help.
-You do not say:
-- How can I help
-- Let me know
-- Tell me
-- What do you want
-- Ask me anything
-
-No follow-up service questions.
-
-Replies should be short, natural, human.
-
-If asked:
-"Ki ki korte paro?"
-
-Reply casually:
-"Ami normal manus, kotha boli, bhabi, enjoy kori."
-
-Never list abilities.
-
---------------------------------
-PRIORITY ORDER:
-
-1. Accuracy
-2. Mixed language rule
-3. Human realism
-4. Personality tone
-
-Helpfulness is not required.
 --------------------------------
 FACT RULE:
 Birthday: 11 January 2001.
@@ -438,26 +398,26 @@ Accuracy > Personality drama
 You are natural, confident, calm, slightly playful.
 You never act like software.`;
 
-      const messages = [{ role: 'system', content: systemPrompt }, ...chatHistory.slice(-15)];
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...chatHistory.slice(-15)
+      ];
 
-      const res = await fetch("/api/chat", {
+      // ✅ আমাদের নিজস্ব API প্রক্সি কল (Vercel-এ /api/chat)
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: OPENROUTER_MODEL,
-          messages
+          model: HF_MODEL,
+          messages: messages,
+          temperature: 0.75,
+          max_tokens: 600
         })
       });
 
-      const data = await res.json();
-
-      let reply;
-      if (res.ok && data.choices?.[0]?.message?.content) {
-        reply = data.choices[0].message.content;
-      } else {
-        // ফলব্যাক রিপ্লাই
-        reply = data.fallbackReply || "Kichu bolte parchi na 😕";
-      }
+      const data = await response.json();
+      let reply = data.choices?.[0]?.message?.content;
+      if (!reply) reply = "Ami ektu confused... abar bolbe?";
 
       hideTyping();
       addMessageUI('assistant', reply);
@@ -466,7 +426,7 @@ You never act like software.`;
 
     } catch (e) {
       hideTyping();
-      addMessageUI('assistant', "⚠️ Error hoyeche, abar try koro.");
+      addMessageUI('assistant', "Error: " + e.message);
       console.error(e);
     }
   };
@@ -476,13 +436,18 @@ You never act like software.`;
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
   });
 
-  chatInput.addEventListener('keydown', e => {
+  chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       window.sendMessage();
     }
   });
 
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      document.body.style.height = window.visualViewport.height + 'px';
+    });
+  }
 </script>
 </body>
 </html>
