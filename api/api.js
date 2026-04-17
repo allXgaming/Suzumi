@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
 
 dotenv.config();
 
@@ -37,5 +36,4 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Vercel-এ app.listen() দরকার নেই, এক্সপোর্ট করলেই চলবে
 export default app;
